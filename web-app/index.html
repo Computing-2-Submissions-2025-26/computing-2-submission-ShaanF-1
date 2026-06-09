@@ -1,9 +1,65 @@
-<!-- In HTML Comments are written like this -->
-<!-- They can all be removed for your apps -->
-<!doctype html> <!-- This first line tells browsers to expect modern standard html 5 -->
-<html lang="en-gb"> <!-- This is indicates the page is written in British English, useful for accessibility -->
-<meta charset="utf-8"> <!-- This indicates how the file is encoded. utf-8 is standard -->
-<title>Your Web-app Title</title> <!-- All pages need a title, this will be displayed in the browser's title bar -->
-<link rel="stylesheet" href="default.css"> <!-- Import style sheet – default.css -->
-<link rel="icon" href="./assets/favicon.png"> <!-- Import 'Favorites Icon' – favicon.png -->
-<script type="module" src="main.js"></script> <!-- Load the main script. Must be type="module". Have only one of these -->
+<!DOCTYPE html> <!--Tells browser its an HTML 5 doc-->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yinsh</title> <!-- Text shown in browser tab -->
+
+    <link rel="stylesheet" href="default.css"> <!-- links CSS to this html file -->
+
+</head>
+
+
+<body>
+    <main class="layout">
+        <aside class="sidebar">
+            <h1>YINSH</h1>
+
+            <section id="status">
+                <p id="current-player">Current player: White</p>
+                <p id="phase">Phase: Setup</p>
+                <p id="hover-coordinate">Hex Co-ordinate: none</p>
+
+            </section>
+
+
+
+            <button id="restart" type="button">Restart game</button>
+        </aside>
+
+        <section class="board-area">
+            <div class="board-wrapper">
+                <canvas id="board" width="600" height="600"></canvas>
+                
+                <div class="removed-panel top-right">
+                    <div id="white-removed-rings" class="ring-row">
+                        <div id="white-ring-1" class="removed-ring white"></div>
+                        <div id="white-ring-2" class="removed-ring white"></div>
+                        <div id="white-ring-3" class="removed-ring white"></div>
+                    </div>
+                </div>
+
+                <div class="removed-panel bottom-left">
+                    <div id="black-removed-rings" class="ring-row">
+                        <div id="black-ring-1" class="removed-ring black"></div>
+                        <div id="black-ring-2" class="removed-ring black"></div>
+                        <div id="black-ring-3" class="removed-ring black"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="winner-popup" style="display:none">
+            <h2 id="winner-text"></h2>
+            <button id="play-again">Play Again</button>
+        </div>
+
+
+     
+    <script type="module" src="main.js"></script>
+</body>
+
+<footer>
+    FisherSoft
+</footer>

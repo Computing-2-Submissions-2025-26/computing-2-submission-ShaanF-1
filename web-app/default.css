@@ -1,0 +1,113 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.layout {
+    min-height: 100vh;
+    display: flex;
+}
+
+.sidebar {
+    width: 180px;
+    padding: 24px;
+    background: #6081A1;
+    color: white;
+}
+
+.board-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #9BB1C6;
+    overflow: auto; 
+}
+
+
+.board-wrapper {
+    position: relative; /*makes the position of the panels relative to the wrapper*/
+    width: 600px;
+    height: 600px;
+}
+
+#board {
+    width: 600px;
+    height: 600px;
+    background: #9BB1C6;
+    /* outline: 2px solid black;     */
+}
+
+.removed-panel{
+    position: absolute;
+}
+
+.removed-panel.top-right{
+    top: 50px;
+    right: -100px;
+ }
+
+.removed-panel.bottom-left{
+    bottom: 50px;
+    left: -100px;
+ }
+
+
+.ring-row {
+    display: flex;
+    gap: 8px;
+}
+
+.removed-ring {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #D1DAE1;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.removed-ring.white.filled {
+    border: 6px solid #ffffff;
+}
+
+.removed-ring.black.filled {
+    border: 6px solid #000000;
+}
+
+#winner-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    z-index: 10;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+#winner-popup h2 {
+    margin-bottom: 1rem;
+}
+
+#winner-popup button {
+    padding: 12px 24px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #6081A1;
+    color: white;
+}
+
+
+
+footer {
+    position: fixed;
+    font-family: "Times New Roman", Times, serif;
+    right: 16px;
+    bottom: 12px;
+    color: white;
+    font-size: 0.9rem;
+}

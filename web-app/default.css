@@ -1,3 +1,10 @@
+:root {
+--bg-sidebar-colour: #3A5068;
+--sidebar-text-colour: #ffff;
+
+}
+
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -11,8 +18,8 @@ body {
 .sidebar {
     width: 180px;
     padding: 24px;
-    background: #6081A1;
-    color: white;
+    background: var(--bg-sidebar-colour);
+    color: var(--sidebar-text-colour);
 }
 
 .board-area {
@@ -89,6 +96,7 @@ body {
 
 #winner-popup h2 {
     margin-bottom: 1rem;
+    margin-right: 1rem;
 }
 
 #winner-popup button {

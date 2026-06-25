@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "docdash": "^2.0.2",
+    "fast-check": "^4.8.0",
     "mocha": "^11.7.5"
   }
 }

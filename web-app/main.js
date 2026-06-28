@@ -576,16 +576,15 @@ canvas.onclick = function (event) {
 
 
 restart_button.onclick = function () {
-    if (black_timeout !== undefined) {
-        clearTimeout(black_timeout);
-        black_timeout = undefined;
-        state = Yinsh.initial_state();
-        draw_board(state);
-        update_sidebar(state);
-        update_rings(state);
-        black_is_placing = false;
-    }
-
+    clearTimeout(black_timeout);
+    black_timeout = undefined;
+    state = Yinsh.initial_state();
+    draw_board(state);
+    selected_position = undefined;
+    potential_positions = undefined;
+    update_sidebar(state);
+    update_rings(state);
+    black_is_placing = false;
 };
 
 easy_difficulty_button.onclick = function () {
@@ -595,6 +594,8 @@ easy_difficulty_button.onclick = function () {
     root.style.setProperty("--hard-button-bg-colour", "#ffff");
     root.style.setProperty("--hard-button-text-colour", "#204060");
     easy_difficulty_button.setAttribute("aria-pressed", "true");
+    hard_difficulty_button.setAttribute("aria-pressed", "false");
+
 };
 hard_difficulty_button.onclick = function () {
     difficulty = 1;
@@ -603,6 +604,8 @@ hard_difficulty_button.onclick = function () {
     root.style.setProperty("--hard-button-text-colour", "#ffff");
     root.style.setProperty("--hard-button-bg-colour", "#204060");
     hard_difficulty_button.setAttribute("aria-pressed", "true");
+    easy_difficulty_button.setAttribute("aria-pressed", "false");
+
 
 
 };

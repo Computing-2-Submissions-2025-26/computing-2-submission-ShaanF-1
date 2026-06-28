@@ -29,7 +29,7 @@
 <nav >
     
     
-    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="Yinsh.html">Yinsh</a><ul class='members'><li data-type='member'><a href="Yinsh.html#.valid_co_ordinates">valid_co_ordinates</a></li></ul><ul class='methods'><li data-type='method'><a href="Yinsh.html#.initial_state">initial_state</a></li><li data-type='method'><a href="Yinsh.html#.is_valid_co_ordinate">is_valid_co_ordinate</a></li><li data-type='method'><a href="Yinsh.html#.keys_to_positions">keys_to_positions</a></li><li data-type='method'><a href="Yinsh.html#.lines_of_five">lines_of_five</a></li><li data-type='method'><a href="Yinsh.html#.move_ring">move_ring</a></li><li data-type='method'><a href="Yinsh.html#.place_ring">place_ring</a></li><li data-type='method'><a href="Yinsh.html#.position_to_key">position_to_key</a></li><li data-type='method'><a href="Yinsh.html#.remove_markers">remove_markers</a></li><li data-type='method'><a href="Yinsh.html#.valid_move">valid_move</a></li><li data-type='method'><a href="Yinsh.html#.winner">winner</a></li></ul></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="Yinsh.html">Yinsh</a><ul class='members'><li data-type='member'><a href="Yinsh.html#.valid_co_ordinates">valid_co_ordinates</a></li></ul><ul class='methods'><li data-type='method'><a href="Yinsh.html#.initial_state">initial_state</a></li><li data-type='method'><a href="Yinsh.html#.is_valid_co_ordinate">is_valid_co_ordinate</a></li><li data-type='method'><a href="Yinsh.html#.lines_of_five">lines_of_five</a></li><li data-type='method'><a href="Yinsh.html#.move_ring">move_ring</a></li><li data-type='method'><a href="Yinsh.html#.place_ring">place_ring</a></li><li data-type='method'><a href="Yinsh.html#.remove_markers">remove_markers</a></li><li data-type='method'><a href="Yinsh.html#.valid_move">valid_move</a></li><li data-type='method'><a href="Yinsh.html#.winner">winner</a></li></ul></li></ul>
     
 </nav>
 
@@ -185,13 +185,15 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>All valid positions on the Yinsh board</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>All valid positions on the Yinsh board. The board is a
+hexagonal grid of radius 5, with the six corner positions
+removed.</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line223">line 223</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line228">line 228</a>
     </li></ul></dd>
     
 
@@ -231,7 +233,9 @@
 
 
 <div class="description usertext">
-    <p>All valid positions on the Yinsh board</p>
+    <p>All valid positions on the Yinsh board. The board is a
+hexagonal grid of radius 5, with the six corner positions
+removed.</p>
 </div>
 
 
@@ -279,7 +283,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line233">line 233</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line238">line 238</a>
     </li></ul></dd>
     
 
@@ -382,13 +386,13 @@ starting the game</p>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Checks if the selected co_ordinate is on the board</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>Checks whether a position lies on the Yinsh hex board</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line261">line 261</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line266">line 266</a>
     </li></ul></dd>
     
 
@@ -530,164 +534,6 @@ starting the game</p>
 
     
 
-    <h4 class="name" id=".keys_to_positions"><span class="type-signature type-signature-static">(static) </span>keys_to_positions<span class="signature">(keys)</span><span class="type-signature"> &rarr; {Array.&lt;<a href="Yinsh.html#.Position">Yinsh.Position</a>>}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-    
-    <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Converts an array of position key strings back to position objects</p></li></ul></dd>
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line209">line 209</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <h5 class="h5-parameters">Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>keys</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Array of position keys in form &quot;r,q&quot;</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5 class="h5-returns">Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>Array of position objects</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Array.&lt;<a href="Yinsh.html#.Position">Yinsh.Position</a>></span>
-
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id=".lines_of_five"><span class="type-signature type-signature-static">(static) </span>lines_of_five<span class="signature">(state)</span><span class="type-signature"> &rarr; {Array.&lt;<a href="Yinsh.html#.LineOfFive">Yinsh.LineOfFive</a>>|undefined}</span></h4>
 
     
@@ -698,13 +544,15 @@ starting the game</p>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Finds five markers in a row of the same colour</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>In Yinsh, when a player completes a row of five markers of their colour,
+they remove those markers and score a point. This returns all lines of
+5 in a row on a board to be passed to <a href="Yinsh.html#.remove_markers"><code>Yinsh.remove_markers</code></a>.</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line564">line 564</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line579">line 579</a>
     </li></ul></dd>
     
 
@@ -793,7 +641,7 @@ starting the game</p>
 
             
 
-            <td class="description last"><p>game state</p></td>
+            <td class="description last"><p>Current game state</p></td>
         </tr>
 
     
@@ -819,8 +667,8 @@ starting the game</p>
 
         
 <div class="param-desc">
-    <p>all lines of five,
-if there are no lines of five, returns undefined</p>
+    <p>All lines of five
+of same colour markers, returns undefined if none exist.</p>
 </div>
 
 
@@ -868,7 +716,7 @@ Any markers on the path are flipped to the opposite colour</p></li></ul></dd>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line351">line 351</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line482">line 482</a>
     </li></ul></dd>
     
 
@@ -957,7 +805,7 @@ Any markers on the path are flipped to the opposite colour</p></li></ul></dd>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Current game state</p></td>
         </tr>
 
     
@@ -1072,13 +920,16 @@ or undefined if move is illegal</p>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Places the player's ring during the setup phase</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>During the setup phase, the current player places
+one of their rings on an empty board position. Once
+all ten rings are placed, the game transitions to the
+active phase</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line283">line 283</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line290">line 290</a>
     </li></ul></dd>
     
 
@@ -1167,7 +1018,7 @@ or undefined if move is illegal</p>
 
             
 
-            <td class="description last"><p>Contains board information</p></td>
+            <td class="description last"><p>The current game state</p></td>
         </tr>
 
     
@@ -1191,8 +1042,7 @@ or undefined if move is illegal</p>
 
             
 
-            <td class="description last"><p>Co-ordinate the player places
-ring on</p></td>
+            <td class="description last"><p>Position to place the ring</p></td>
         </tr>
 
     
@@ -1218,9 +1068,11 @@ ring on</p></td>
 
         
 <div class="param-desc">
-    <p>Return new state
-with placed ring on board
-otherwise return undefined</p>
+    <p>The updated game state
+after placing a ring, or undefined if the placement is illegal</p>
+<ul>
+<li>either because its occupied, not on the board or it is not the setup phase</li>
+</ul>
 </div>
 
 
@@ -1250,164 +1102,6 @@ otherwise return undefined</p>
 
     
 
-    <h4 class="name" id=".position_to_key"><span class="type-signature type-signature-static">(static) </span>position_to_key<span class="signature">(position)</span><span class="type-signature"> &rarr; {string}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-    
-    <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Converts a position object to a string key for board lookups</p></li></ul></dd>
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line199">line 199</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <h5 class="h5-parameters">Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>position</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Yinsh.html#.Position">Yinsh.Position</a></span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Position to be converted</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5 class="h5-returns">Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>Position key in form &quot;r,q&quot;</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id=".remove_markers"><span class="type-signature type-signature-static">(static) </span>remove_markers<span class="signature">(state, lines_of_five)</span><span class="type-signature"> &rarr; {<a href="Yinsh.html#.GameState">Yinsh.GameState</a>}</span></h4>
 
     
@@ -1418,13 +1112,16 @@ otherwise return undefined</p>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Remove any lines of five from the board</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>Removes a completed line of five markers from the board,
+and increments the associated player's score by 1. If multiple
+lines of five are created by an intersecting marker, the first line is
+removed as per Yinsh rules.</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line646">line 646</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line664">line 664</a>
     </li></ul></dd>
     
 
@@ -1513,7 +1210,7 @@ otherwise return undefined</p>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>The current game state</p></td>
         </tr>
 
     
@@ -1537,7 +1234,8 @@ otherwise return undefined</p>
 
             
 
-            <td class="description last"><p>Lines of five markers to remove</p></td>
+            <td class="description last"><p>The Lines of
+five markers to remove</p></td>
         </tr>
 
     
@@ -1600,13 +1298,21 @@ otherwise return undefined</p>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Checks if move is a legal Yinsh move</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>Checks if move is a legal Yinsh move. A move is legal if:</p>
+<ul>
+<li>the game state is active</li>
+<li>the new position is unnocupied by rings and markeres,</li>
+<li>the position is on the hex-board</li>
+<li>it travels in a straight line</li>
+<li>it doesn't pass through a ring
+-it lands immediately after the last consecutive marker</li>
+</ul></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line446">line 446</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line362">line 362</a>
     </li></ul></dd>
     
 
@@ -1695,7 +1401,7 @@ otherwise return undefined</p>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>The current game state</p></td>
         </tr>
 
     
@@ -1719,7 +1425,7 @@ otherwise return undefined</p>
 
             
 
-            <td class="description last"><p>Position of ring to move</p></td>
+            <td class="description last"><p>The position of the ring to move</p></td>
         </tr>
 
     
@@ -1743,7 +1449,7 @@ otherwise return undefined</p>
 
             
 
-            <td class="description last"><p>Position to move ring to</p></td>
+            <td class="description last"><p>The position to move the ring to</p></td>
         </tr>
 
     
@@ -1770,7 +1476,7 @@ otherwise return undefined</p>
         
 <div class="param-desc">
     <p>true if the move is legal,
-or undefined if move is illegal</p>
+or undefined if the move violates any of the above conditions</p>
 </div>
 
 
@@ -1810,13 +1516,13 @@ or undefined if move is illegal</p>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Win condition: Has a player removed 3 rings</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>The first player to complete three lines of five wins the game.</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line689">line 689</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line707">line 707</a>
     </li></ul></dd>
     
 
@@ -1905,7 +1611,7 @@ or undefined if move is illegal</p>
 
             
 
-            <td class="description last"><p>game state to check</p></td>
+            <td class="description last"><p>The current game state to check</p></td>
         </tr>
 
     
@@ -1931,8 +1637,8 @@ or undefined if move is illegal</p>
 
         
 <div class="param-desc">
-    <p>the game state
-with information on who won, undefined if no one has one yet</p>
+    <p>The game state with winner set, or
+undefined if neither player has won yet.</p>
 </div>
 
 
@@ -1977,7 +1683,7 @@ with information on who won, undefined if no one has one yet</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line37">line 37</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line46">line 46</a>
     </li></ul></dd>
     
 
@@ -2046,7 +1752,7 @@ with information on who won, undefined if no one has one yet</p>
             <td class="type">
             
                 
-<span class="param-type">Object.&lt;string, Yinsh.Player></span>
+<span class="param-type">Object.&lt;string, <a href="Yinsh.html#.Player">Yinsh.Player</a>></span>
 
 
 
@@ -2057,7 +1763,8 @@ with information on who won, undefined if no one has one yet</p>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>All rings currently on the board,
+information about their position and colour</p></td>
         </tr>
 
     
@@ -2070,7 +1777,7 @@ with information on who won, undefined if no one has one yet</p>
             <td class="type">
             
                 
-<span class="param-type">Object.&lt;string, Yinsh.Player></span>
+<span class="param-type">Object.&lt;string, <a href="Yinsh.html#.Player">Yinsh.Player</a>></span>
 
 
 
@@ -2081,7 +1788,8 @@ with information on who won, undefined if no one has one yet</p>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>All markers currently on the board, information
+about their position and colour</p></td>
         </tr>
 
     
@@ -2128,7 +1836,7 @@ with information on who won, undefined if no one has one yet</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line20">line 20</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -2225,10 +1933,7 @@ the game is in setup or active play</p></td>
             <td class="type">
             
                 
-<span class="param-type">"white"</span>
-|
-
-<span class="param-type">"black"</span>
+<span class="param-type"><a href="Yinsh.html#.Player">Yinsh.Player</a></span>
 
 
 
@@ -2328,7 +2033,7 @@ each player has removed</p></td>
             <td class="type">
             
                 
-<span class="param-type">Yinsh.Player</span>
+<span class="param-type"><a href="Yinsh.html#.Player">Yinsh.Player</a></span>
 |
 
 <span class="param-type">undefined</span>
@@ -2342,7 +2047,8 @@ each player has removed</p></td>
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>The winner of the game,
+or undefined if the game has not been won</p></td>
         </tr>
 
     
@@ -2393,7 +2099,7 @@ each player has removed</p></td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line53">line 53</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line66">line 66</a>
     </li></ul></dd>
     
 
@@ -2487,10 +2193,7 @@ in the line</p></td>
             <td class="type">
             
                 
-<span class="param-type">"white"</span>
-|
-
-<span class="param-type">"black"</span>
+<span class="param-type"><a href="Yinsh.html#.Player">Yinsh.Player</a></span>
 
 
 
@@ -2537,6 +2240,87 @@ in the line</p></td>
 
             
                 
+<h4 class="name" id=".Player">Player</h4>
+
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>The player colour</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line21">line 21</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description usertext">
+    <p>The player colour</p>
+</div>
+
+
+
+    <h5 class="h5-types">Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">"white"</span>
+|
+
+<span class="param-type">"black"</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+
+            
+                
 <h4 class="name" id=".Position">Position</h4>
 
 
@@ -2553,7 +2337,7 @@ the third axis p is defined as (-r-q) so is not stored</p></li></ul></dd>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line44">line 44</a>
+        <a href="yinsh.js.html">yinsh.js</a>, <a href="yinsh.js.html#line57">line 57</a>
     </li></ul></dd>
     
 
@@ -2710,7 +2494,7 @@ the third axis p is defined as (-r-q) so is not stored</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Jun 25 2026 15:27:18 GMT+0100 (British Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sun Jun 28 2026 11:25:42 GMT+0100 (British Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

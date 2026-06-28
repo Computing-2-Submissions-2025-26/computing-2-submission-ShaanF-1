@@ -1,6 +1,20 @@
 import Yinsh from "./yinsh.js";
 import R from "./ramda.js";
 
+
+// converts position object {r: , q: } to string key "r,q"
+
+const position_to_key = (position) => position.r + "," + position.q;
+
+//... vice verca
+const keys_to_positions = function (keys) {
+    return keys.map(function (key) {
+        const parts = key.split(",");
+        return {r: Number(parts[0]), q: Number(parts[1])};
+    });
+};
+
+
 const Yinsh_Engine = Object.create(null);
 // move scoring
 
@@ -21,7 +35,7 @@ Yinsh_Engine.make_best_move = function (state, depth) {
             return all_rings[key] === current_player;
         }
     );
-    const black_ring_positions = Yinsh.keys_to_positions(black_ring_keys);
+    const black_ring_positions = keys_to_positions(black_ring_keys);
 
     // iterate through each black ring
     const best_moves = [];
@@ -121,7 +135,7 @@ Yinsh_Engine.make_best_move = function (state, depth) {
             }
 
             // log move and score
-            const potential_next_key = Yinsh.position_to_key(
+            const potential_next_key = position_to_key(
                 potential_next_position
             );
             const entry = Object.create(null);
@@ -162,53 +176,92 @@ Yinsh_Engine.make_best_move = function (state, depth) {
     };
 };
 
-Yinsh_Engine.distribute_rings = function (state) {
+Yinsh_Engine.distribute_rings = function (state, difficulty) {
+
     // find all spaces that are free to provide a list of options to choose from
     const free_spaces = Yinsh.valid_co_ordinates.filter(function (co_ord) {
         const is_placed = Object.keys(state.board.rings).some(
             function (key) {
-                return key === Yinsh.position_to_key(co_ord);
+                return key === position_to_key(co_ord);
             }
         );
         return !is_placed;
     });
 
-    // implement a rule where each ring at least 1 away from every other ring
-    const isolated_spaces = free_spaces.filter(function (free_space) {
-        const surrounding_spaces = [
-            {r: free_space.r + 1, q: free_space.q},
-            {r: free_space.r - 1, q: free_space.q},
-            {r: free_space.r, q: free_space.q + 1},
-            {r: free_space.r, q: free_space.q - 1},
-            {r: free_space.r + 1, q: free_space.q - 1},
-            {r: free_space.r - 1, q: free_space.q + 1}
-        ];
-
-        const is_surrounding_area_free = !surrounding_spaces.some(
-            function (space) {
-                return Object.keys(state.board.rings).some(
-                    function (board_ring) {
-                        return Yinsh.position_to_key(space) === board_ring;
-                    }
-                );
-            }
-        );
-        return is_surrounding_area_free;
-    });
-
-    const random_isolated_space = isolated_spaces[
-        Math.floor(Math.random() * isolated_spaces.length)
-    ];
-    const new_state = Yinsh.place_ring(state, random_isolated_space);
-    if (new_state !== undefined) {
-        return new_state;
-    }
     const random_free_space = free_spaces[
         Math.floor(Math.random() * free_spaces.length)
     ];
-    console.log("couldn't satisfy rule");
-    // in case can't satisfy rule
-    return Yinsh.place_ring(state, random_free_space);
+
+
+
+
+    if (difficulty === 1) {
+
+        // find all enemy rings
+        const enemy_rings = Object.keys(state.board.rings).filter(
+            function (key) {
+                return state.board.rings[key] !== state.current_player;
+            }
+        ).map(function (key) {
+            return keys_to_positions([key])[0];
+        });
+
+        // create a near enemy ring score on free spaces
+        const near_enemy_ring = free_spaces.filter(function (co_ord) {
+            return enemy_rings.some(function (enemy_ring) {
+                const d_r = Math.abs(co_ord.r - enemy_ring.r);
+                const d_q = Math.abs(co_ord.q - enemy_ring.q);
+                return d_r <= 1 && d_q <= 1;
+            });
+        });
+
+        const random_obstructing = near_enemy_ring[
+            Math.floor(Math.random() * near_enemy_ring.length)
+        ];
+
+        if (near_enemy_ring.length === 0) {
+            return Yinsh.place_ring(state, random_free_space);
+        }
+
+        return Yinsh.place_ring(state, random_obstructing);
+    }
+
+
+    if (difficulty === 0) {
+    // implement a rule where each ring at least 1 away from every other ring
+        const isolated_spaces = free_spaces.filter(function (free_space) {
+            const surrounding_spaces = [
+                {r: free_space.r + 1, q: free_space.q},
+                {r: free_space.r - 1, q: free_space.q},
+                {r: free_space.r, q: free_space.q + 1},
+                {r: free_space.r, q: free_space.q - 1},
+                {r: free_space.r + 1, q: free_space.q - 1},
+                {r: free_space.r - 1, q: free_space.q + 1}
+            ];
+
+            const is_surrounding_area_free = !surrounding_spaces.some(
+                function (space) {
+                    return Object.keys(state.board.rings).some(
+                        function (board_ring) {
+                            return position_to_key(space) === board_ring;
+                        }
+                    );
+                }
+            );
+            return is_surrounding_area_free;
+        });
+
+        const random_isolated_space = isolated_spaces[
+            Math.floor(Math.random() * isolated_spaces.length)
+        ];
+
+
+        const new_state = Yinsh.place_ring(state, random_isolated_space);
+        if (new_state !== undefined) {
+            return new_state;
+        }
+        return Yinsh.place_ring(state, random_free_space);
+    }
 };
 
 export default Object.freeze(Yinsh_Engine);

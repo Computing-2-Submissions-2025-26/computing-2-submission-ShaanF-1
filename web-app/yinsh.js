@@ -17,13 +17,21 @@ const Yinsh = Object.create(null);
 //    Type Definitions
 // ========================
 
+
+/**
+ * The player colour
+ * @memberof Yinsh
+ * @typedef {"white" | "black"} Player The colour
+ * of the player's markers
+ */
+
 /**
  * Complete state of a game during a given turn
  * @memberof Yinsh
  * @typedef {object} GameState
  * @property {"setup" | "active"} phase Whether
  *  the game is in setup or active play
- * @property {"white" | "black"} current_player The player whose turn
+ * @property {Yinsh.Player} current_player The player whose turn
  * it is
  * @property {Yinsh.Board} board All rings and markers currently on the
  * board
@@ -31,14 +39,19 @@ const Yinsh = Object.create(null);
  *  each player has placed so far during setup phase
  * @property {{white: number, black: number}} rings_removed The number of rings
  * each player has removed
- * @property {Yinsh.Player | undefined} winner
+ * @property {Yinsh.Player | undefined} winner The winner of the game,
+ * or undefined if the game has not been won
  */
 
 /**
 * @memberof Yinsh
 * @typedef {Object} Board
 * @property {Object.<string, Yinsh.Player>} rings
+* All rings currently on the board,
+* information about their position and colour
 * @property {Object.<string, Yinsh.Player>} markers
+* All markers currently on the board, information
+*  about their position and colour
 */
 
 /**
@@ -56,8 +69,10 @@ const Yinsh = Object.create(null);
  * @typedef {Object} LineOfFive
  * @property {Array.<Yinsh.Position>} line The five positions
  * in the line
- * @property {"white" | "black"} colour The colour of the markers
+ * @property {Yinsh.Player} colour The colour of the markers
  */
+
+
 
 
 
@@ -118,7 +133,7 @@ const find_valid_co_ordinates = function () {
 //    Private Helper Functions
 // ========================
 
-const co_ords_in_between = function (array, position_1, position_2) {
+Yinsh.co_ords_in_between = function (array, position_1, position_2) {
 
     const position_1_p = -position_1.r - position_1.q;
     const position_2_p = -position_2.r - position_2.q;
@@ -141,8 +156,8 @@ const co_ords_in_between = function (array, position_1, position_2) {
         : undefined
     );
 
-    let min = undefined;
-    let max = undefined;
+    let min;
+    let max;
     // check if p1 or p2 varying axis is larger
     if (varying_axis === "qr") {
         min = Math.min(position_1.q, position_2.q);
@@ -181,32 +196,12 @@ const next_player = function (player) {
     }
 };
 
+// converts position object {r: , q: } to string key "r,q"
 
+const position_to_key = (position) => position.r + "," + position.q;
 
-
-// ========================
-//     Public API
-// ========================
-
-/**
- * Converts a position object to a string key for board lookups
- * @memberof Yinsh
- * @function
- * @param {Yinsh.Position} position Position to be converted
- * @returns {string} Position key in form "r,q"
- */
-
-Yinsh.position_to_key = (position) => position.r + "," + position.q;
-
-/**
- * Converts an array of position key strings back to position objects
- * @memberof Yinsh
- * @function
- * @param {Array.<string>} keys Array of position keys in form "r,q"
- * @returns {Array.<Yinsh.Position>} Array of position objects
- */
-
-Yinsh.keys_to_positions = function (keys) {
+//... vice verca
+const keys_to_positions = function (keys) {
     return keys.map(function (key) {
         const parts = key.split(",");
         return {r: Number(parts[0]), q: Number(parts[1])};
@@ -214,8 +209,18 @@ Yinsh.keys_to_positions = function (keys) {
 };
 
 
+
+
+// ========================
+//     Public API
+// ========================
+
+
+
 /**
- * All valid positions on the Yinsh board
+ * All valid positions on the Yinsh board. The board is a
+ * hexagonal grid of radius 5, with the six corner positions
+ * removed.
  * @memberof Yinsh
  * @type {Array.<Yinsh.Position>}
 */
@@ -252,7 +257,7 @@ Yinsh.initial_state = function () {
 
 
 /**
- * Checks if the selected co_ordinate is on the board
+ * Checks whether a position lies on the Yinsh hex board
  * @memberof Yinsh
  * @function
  * @param {Yinsh.Position} position Co_ordinate to check validity of
@@ -269,19 +274,21 @@ Yinsh.is_valid_co_ordinate = function (position) {
 
 
 /**
- * Places the player's ring during the setup phase
+ * During the setup phase, the current player places
+ * one of their rings on an empty board position. Once
+ * all ten rings are placed, the game transitions to the
+ * active phase
  * @memberof Yinsh
  * @function
- * @param {Yinsh.GameState} game_state Contains board information
- * @param {Yinsh.Position} position Co-ordinate the player places
- * ring on
- * @returns {Yinsh.GameState | undefined } Return new state
- * with placed ring on board
- * otherwise return undefined
+ * @param {Yinsh.GameState} game_state The current game state
+ * @param {Yinsh.Position} position Position to place the ring
+ * @returns {Yinsh.GameState | undefined } The updated game state
+ * after placing a ring, or undefined if the placement is illegal
+ * - either because its occupied, not on the board or it is not the setup phase
  */
 
 Yinsh.place_ring = function (game_state, position) {
-    const key = Yinsh.position_to_key(position);
+    const key = position_to_key(position);
         // is position valid board space
     if (!Yinsh.is_valid_co_ordinate(position)) {
         return undefined;
@@ -336,111 +343,20 @@ Yinsh.place_ring = function (game_state, position) {
 };
 
 /**
- * Moves current player's ring in a straight line
- * Leaving a marker of their colour at the original location
- * Any markers on the path are flipped to the opposite colour
+ * Checks if move is a legal Yinsh move. A move is legal if:
+ * - the game state is active
+ * - the new position is unnocupied by rings and markeres,
+ * - the position is on the hex-board
+ * - it travels in a straight line
+ * - it doesn't pass through a ring
+ *  -it lands immediately after the last consecutive marker
  * @memberof Yinsh
  * @function
- * @param {Yinsh.GameState} game_state
- * @param {Yinsh.Position} original_position Position of ring to move
- * @param {Yinsh.Position} new_position New position to move ring to
- * @returns {Yinsh.GameState | undefined} The updated game state,
- * or undefined if move is illegal
- */
-
-Yinsh.move_ring = function (game_state, original_position, new_position) {
-
-        // validity check
-    if (!Yinsh.valid_move(game_state, original_position, new_position)) {
-        return undefined;
-    }
-    const original_key = Yinsh.position_to_key(original_position);
-    const new_key = Yinsh.position_to_key(new_position);
-
-    const placed_markers = Yinsh.keys_to_positions(
-        Object.keys(game_state.board.markers)
-    );
-
-    const markers_in_between = co_ords_in_between(
-        placed_markers,
-        original_position,
-        new_position
-    );
-
-    const current_player = game_state.current_player;
-
-        // remove ring stored at original position
-    const ring_positions_without_moved_ring = Object.fromEntries(
-        Object.entries(game_state.board.rings).filter(
-            function ([k]) {
-                return k !== original_key;
-            }
-        )
-    );
-
-        // flip markers in between
-    const new_marker_object_with_flipped_markers = Object.fromEntries(
-        Object.entries(game_state.board.markers).map(
-            function ([k, v]) {
-                if (markers_in_between.some(function (co_ord) {
-                    return Yinsh.position_to_key(co_ord) === k;
-                })) {
-                    return [k, (
-                        v === "white"
-                        ? "black"
-                        : "white"
-                    )];
-                }
-                return [k, v];
-            }
-        )
-    );
-
-
-    const new_rings = Object.assign({}, ring_positions_without_moved_ring);
-    new_rings[new_key] = current_player; // updated ring position
-
-    const new_markers = Object.assign(
-        {},
-        new_marker_object_with_flipped_markers
-    );
-    new_markers[original_key] = current_player;
-
-    let moved_state = Object.assign({}, game_state, {
-        current_player: next_player(current_player),
-        board: {
-            rings: new_rings,
-            markers: new_markers
-        }
-    });
-
-    let lines_of_five = Yinsh.lines_of_five(moved_state);
-
-    // iterate through to remove all lines of five
-    while (lines_of_five !== undefined) {
-        moved_state = Yinsh.remove_markers(moved_state, lines_of_five);
-        lines_of_five = Yinsh.lines_of_five(moved_state);
-    }
-
-    const is_winner = Yinsh.winner(moved_state);
-    if (is_winner) {
-        return is_winner;
-    }
-
-    return moved_state;
-};
-
-
-
-/**
- * Checks if move is a legal Yinsh move
- * @memberof Yinsh
- * @function
- * @param {Yinsh.GameState} game_state
- * @param {Yinsh.Position} original_position Position of ring to move
- * @param {Yinsh.Position} new_position Position to move ring to
+ * @param {Yinsh.GameState} game_state The current game state
+ * @param {Yinsh.Position} original_position The position of the ring to move
+ * @param {Yinsh.Position} new_position The position to move the ring to
  * @returns {true | undefined} true if the move is legal,
- * or undefined if move is illegal
+ * or undefined if the move violates any of the above conditions
  */
 
 Yinsh.valid_move = function (game_state, original_position, new_position) {
@@ -461,7 +377,7 @@ Yinsh.valid_move = function (game_state, original_position, new_position) {
     }
 
     // is the ring trying to be moved the current players?
-    const original_key = Yinsh.position_to_key(original_position);
+    const original_key = position_to_key(original_position);
     if (game_state.board.rings[
         original_key
     ] !== game_state.current_player) {
@@ -495,7 +411,7 @@ Yinsh.valid_move = function (game_state, original_position, new_position) {
     }
 
     // is space occupied? by ring OR marker
-    const new_key = Yinsh.position_to_key(new_position);
+    const new_key = position_to_key(new_position);
     if (
         game_state.board.rings[new_key] !== undefined
         || game_state.board.markers[new_key]
@@ -505,8 +421,8 @@ Yinsh.valid_move = function (game_state, original_position, new_position) {
     }
 
     // are there any rings in path?
-    if (co_ords_in_between(
-        Yinsh.keys_to_positions(Object.keys(game_state.board.rings)),
+    if (Yinsh.co_ords_in_between(
+        keys_to_positions(Object.keys(game_state.board.rings)),
         original_position,
         new_position
     ).length !== 0) {
@@ -519,8 +435,8 @@ Yinsh.valid_move = function (game_state, original_position, new_position) {
     // has the ring also travelled over any empty spaces?
 
 
-    const markers_in_between = co_ords_in_between(
-        Yinsh.keys_to_positions(Object.keys(
+    const markers_in_between = Yinsh.co_ords_in_between(
+        keys_to_positions(Object.keys(
             game_state.board.markers
         )),
         original_position,
@@ -529,7 +445,7 @@ Yinsh.valid_move = function (game_state, original_position, new_position) {
 
 
 
-    const valid_co_ordinates_in_between = co_ords_in_between(
+    const valid_co_ordinates_in_between = Yinsh.co_ords_in_between(
         Yinsh.valid_co_ordinates,
         original_position,
         new_position
@@ -550,14 +466,113 @@ Yinsh.valid_move = function (game_state, original_position, new_position) {
 };
 
 
-
 /**
- * Finds five markers in a row of the same colour
+ * Moves current player's ring in a straight line
+ * Leaving a marker of their colour at the original location
+ * Any markers on the path are flipped to the opposite colour
  * @memberof Yinsh
  * @function
- * @param {Yinsh.GameState} state game state
- * @returns {Array.<Yinsh.LineOfFive> | undefined} all lines of five,
- * if there are no lines of five, returns undefined
+ * @param {Yinsh.GameState} game_state Current game state
+ * @param {Yinsh.Position} original_position Position of ring to move
+ * @param {Yinsh.Position} new_position New position to move ring to
+ * @returns {Yinsh.GameState | undefined} The updated game state,
+ * or undefined if move is illegal
+ */
+
+Yinsh.move_ring = function (game_state, original_position, new_position) {
+
+        // validity check
+    if (!Yinsh.valid_move(game_state, original_position, new_position)) {
+        return undefined;
+    }
+    const original_key = position_to_key(original_position);
+    const new_key = position_to_key(new_position);
+
+    const placed_markers = keys_to_positions(
+        Object.keys(game_state.board.markers)
+    );
+
+    const markers_in_between = Yinsh.co_ords_in_between(
+        placed_markers,
+        original_position,
+        new_position
+    );
+
+    const current_player = game_state.current_player;
+
+        // remove ring stored at original position
+    const ring_positions_without_moved_ring = Object.fromEntries(
+        Object.entries(game_state.board.rings).filter(
+            function ([k]) {
+                return k !== original_key;
+            }
+        )
+    );
+
+        // flip markers in between
+    const new_marker_object_with_flipped_markers = Object.fromEntries(
+        Object.entries(game_state.board.markers).map(
+            function ([k, v]) {
+                if (markers_in_between.some(function (co_ord) {
+                    return position_to_key(co_ord) === k;
+                })) {
+                    return [k, (
+                        v === "white"
+                        ? "black"
+                        : "white"
+                    )];
+                }
+                return [k, v];
+            }
+        )
+    );
+
+
+    const new_rings = Object.assign({}, ring_positions_without_moved_ring);
+    new_rings[new_key] = current_player; // updated ring position
+
+    const new_markers = Object.assign(
+        {},
+        new_marker_object_with_flipped_markers
+    );
+    new_markers[original_key] = current_player;
+
+    let moved_state = Object.assign({}, game_state, {
+        current_player: next_player(current_player),
+        board: {
+            rings: new_rings,
+            markers: new_markers
+        }
+    });
+
+
+    const resolve_lines = function (state) {
+        const lines = Yinsh.lines_of_five(state);
+        if (lines === undefined) {
+            return state;
+        }
+        return resolve_lines(Yinsh.remove_markers(state, lines));
+    };
+    moved_state = resolve_lines(moved_state);
+
+    const is_winner = Yinsh.winner(moved_state);
+    if (is_winner) {
+        return is_winner;
+    }
+
+    return moved_state;
+};
+
+
+/**
+ * In Yinsh, when a player completes a row of five markers of their colour,
+ * they remove those markers and score a point. This returns all lines of
+ *  5 in a row on a board to be passed to {@link Yinsh.remove_markers}.
+ * @memberof Yinsh
+ * @function
+ * @param {Yinsh.GameState} state Current game state
+ * @returns {Array.<Yinsh.LineOfFive> | undefined} All lines of five
+ *  of same colour markers, returns undefined if none exist.
  */
 
 
@@ -607,13 +622,13 @@ Yinsh.lines_of_five = function (state) {
     all_possible_lines_of_fives = all_possible_lines_of_fives.flat();
 
     all_possible_lines_of_fives.forEach(function (line_of_five) {
-        const first_key = Yinsh.position_to_key(line_of_five[0]);
+        const first_key = position_to_key(line_of_five[0]);
         const colour_1 = state.board.markers[first_key];
         // iterating through line of five co_ords
         if (line_of_five.every(function (line_of_five_coord) {
         // checking if one of the line of
         //  five co_ords is in the placed markers
-            const key = Yinsh.position_to_key(line_of_five_coord);
+            const key = position_to_key(line_of_five_coord);
             const colour = state.board.markers[key];
 
             return (
@@ -635,12 +650,15 @@ Yinsh.lines_of_five = function (state) {
 
 
 /**
- * Remove any lines of five from the board
+ * Removes a completed line of five markers from the board,
+ * and increments the associated player's score by 1. If multiple
+ * lines of five are created by an intersecting marker, the first line is
+ * removed as per Yinsh rules.
  * @memberof Yinsh
  * @function
- * @param {Yinsh.GameState} state
- * @param {Array.<Yinsh.LineOfFive>} lines_of_five
- * Lines of five markers to remove
+ * @param {Yinsh.GameState} state The current game state
+ * @param {Array.<Yinsh.LineOfFive>} lines_of_five The Lines of
+ * five markers to remove
  * @returns {Yinsh.GameState} Updated game state with the markers removed
  */
 Yinsh.remove_markers = function (state, lines_of_five) {
@@ -650,7 +668,7 @@ Yinsh.remove_markers = function (state, lines_of_five) {
             state.board.markers
         ).filter(function ([key]) {
             return !co_ords_to_remove.some(function (co_ord) {
-                return Yinsh.position_to_key(co_ord) === key;
+                return position_to_key(co_ord) === key;
             });
         })
     );
@@ -679,21 +697,23 @@ Yinsh.remove_markers = function (state, lines_of_five) {
 };
 
 /**
- * Win condition: Has a player removed 3 rings
+ * The first player to complete three lines of five wins the game.
  * @memberof Yinsh
  * @function
- * @param {Yinsh.GameState} state game state to check
- * @returns {Yinsh.GameState | undefined} the game state
- * with information on who won, undefined if no one has one yet
+ * @param {Yinsh.GameState} state The current game state to check
+ * @returns {Yinsh.GameState | undefined} The game state with winner set, or
+ * undefined if neither player has won yet.
  */
 Yinsh.winner = function (state) {
-    if (state.rings_removed.white === 3) {
+    if (state.rings_removed.white >= 3) {
         return Object.assign({}, state, {winner: "white"});
     }
-    if (state.rings_removed.black === 3) {
+    if (state.rings_removed.black >= 3) {
         return Object.assign({}, state, {winner: "black"});
     } else {
         return undefined;
     }
 };
+
+
 export default Object.freeze(Yinsh);

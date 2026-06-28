@@ -13,24 +13,29 @@
 
 <body>
     <main class="layout">
-        <aside class="sidebar">
+        <aside class="sidebar" aria-label="Game Configuration" >
             <h1>YINSH</h1>
 
-            <section id="status">
-                <p id="current-player">Current player: White</p>
+            <section id="status" aria-label="Game Status" aria-live="polite" > 
+                <p id="current-player">Current Player: White</p>
                 <p id="phase">Phase: Setup</p>
-                <p id="hover-coordinate">Hex Co-ordinate: none</p>
-
             </section>
 
+            <button id="restart" type="button">Restart Game</button>
 
+             <div class="difficulty-button">
+                    <div id="difficulty-row" class="ring-row">
+                        <button id="Easy-difficulty" type="button" aria-pressed="false">Easy</button>
+                        <button id="Hard-difficulty" type="button" aria-pressed="false">Hard</button>
+                    </div>
+                </div>       
 
-            <button id="restart" type="button">Restart game</button>
+             <p id="hover-coordinate" aria-live="polite">Hex Co-ordinate: none</p> 
         </aside>
 
-        <section class="board-area" tabindex="0">
+        <section class="board-area" tabindex="0" aria-label="Yinsh Game Board">
             <div class="board-wrapper">
-                <canvas id="board" width="600" height="600"></canvas>
+                <canvas id="board" width="600" height="600"  aria-label="Yinsh game board" role="img"   tabindex="0">></canvas>
                 
                 <div class="removed-panel top-right">
                     <div id="white-removed-rings" class="ring-row">
@@ -40,8 +45,8 @@
                     </div>
                 </div>
 
-                <div class="removed-panel bottom-left">
-                    <div id="black-removed-rings" class="ring-row">
+                <div class="removed-panel bottom-left" >
+                    <div id="black-removed-rings" class="ring-row" >
                         <div id="black-ring-1" class="removed-ring black"></div>
                         <div id="black-ring-2" class="removed-ring black"></div>
                         <div id="black-ring-3" class="removed-ring black"></div>
@@ -50,16 +55,15 @@
             </div>
         </section>
 
-        <div id="winner-popup" style="display:none">
+        <dialog id="result-dialog" tabindex="0" aria-label="Game over message">
             <h2 id="winner-text"></h2>
             <button id="play-again">Play Again</button>
-        </div>
+        </dialog>
+    </main>     
 
-
-     
     <script type="module" src="main.js"></script>
-</body>
 
-<footer>
-  
-</footer>
+
+</body>
+</html>
+

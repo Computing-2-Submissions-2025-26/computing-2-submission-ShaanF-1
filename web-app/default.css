@@ -1,7 +1,10 @@
 :root {
 --bg-sidebar-colour: #3A5068;
 --sidebar-text-colour: #ffff;
-
+--easy-button-bg-colour: #204060;
+--easy-button-text-colour: #ffff;
+--hard-button-text-colour: #204060;
+--hard-button-bg-colour: #ffff;
 }
 
 
@@ -16,12 +19,67 @@ body {
 }
 
 .sidebar {
-    width: 180px;
-    padding: 24px;
+    width: 230px;
+    padding: 24px 16px;
     background: var(--bg-sidebar-colour);
     color: var(--sidebar-text-colour);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
+.sidebar h1 {
+    font-size: 4rem;
+    font-weight: lighter;
+    margin: 0 0 8px 0;
+    border-bottom: 2px solid rgba(255,255,255,0.2);
+    padding-bottom: 12px;
+}
+
+.sidebar p {
+    margin: 0;
+    font-size: 1.2rem;
+    opacity: 1;
+}
+
+#hover-coordinate {
+    font-size: 0.9rem;
+    opacity: 1;
+    font-family: monospace;
+    margin-top: auto;
+}
+
+
+.difficulty-button button{
+    border: none;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 17px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+}
+#Easy-difficulty{
+
+  color: var(--easy-button-text-colour);
+  background: var(--easy-button-bg-colour);
+
+}
+
+#Easy-difficulty:hover {
+  transform: scale(1.05)
+}
+
+#Hard-difficulty{
+  color: var(--hard-button-text-colour);
+  background: var(--hard-button-bg-colour);
+}
+
+#Hard-difficulty:hover {
+  transform: scale(1.05)
+}
 .board-area {
     flex: 1;
     display: flex;
@@ -81,25 +139,26 @@ body {
     border: 6px solid #000000;
 }
 
-#winner-popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+#result-dialog {
+    border: none;
     background: white;
     padding: 2rem;
     border-radius: 12px;
     text-align: center;
-    z-index: 10;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    position: fixed;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    margin: 0;  
 }
 
-#winner-popup h2 {
+#result-dialog h2 {
     margin-bottom: 1rem;
     margin-right: 1rem;
 }
 
-#winner-popup button {
+#result-dialog button {
     padding: 12px 24px;
     font-size: 1rem;
     border-radius: 8px;
@@ -109,6 +168,23 @@ body {
     color: white;
 }
 
+
+#restart {
+    font-size: 1.1rem;
+    font-weight:bold;
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 8px 0;
+    background: #204060;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+#restart:hover {
+  transform: scale(1.05)
+}
 
 
 footer {

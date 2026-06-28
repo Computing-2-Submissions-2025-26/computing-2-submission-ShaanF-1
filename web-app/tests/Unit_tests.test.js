@@ -1,295 +1,410 @@
-import yinsh from "../yinsh.js";
+import Yinsh from "../yinsh.js";
 import fc from "fast-check";
+import R from "../ramda.js";
+
+// The tests were tested with these functions to ensure that all tests failed
+// - as never trust a test that doesnt fail
+// Yinsh.initial_state = function() {return undefined};
+// Yinsh.place_ring = function() { return undefined; };
+// Yinsh.move_ring = function() { return undefined; };
+// Yinsh.valid_move = function() { return undefined; };
+// Yinsh.lines_of_five = function() { return undefined; };
+// Yinsh.remove_markers = function() { return undefined; };
+// Yinsh.winner = function() { return undefined; };
 
 
-// ----Board & Setup----
+// =======================================
+// Conversion Helpers
+// =======================================
+// converts position object {r: , q: } to string key "r,q"
 
-// Initial State:
+const position_to_key = (position) => position.r + "," + position.q;
 
-describe("yinsh.initial_state()", function () {
+//... vice verca
+const keys_to_positions = function (keys) {
+    return keys.map(function (key) {
+        const parts = key.split(",");
+        return {r: Number(parts[0]), q: Number(parts[1])};
+    });
+};
+
+//=========================================
+// Generator Helpers
+//=========================================
+
+// Random element selector
+const pick_random_element = function (array) {
+    const random_index = Math.floor(Math.random() * array.length);
+    return array[random_index];
+
+};
+
+// Random-Setup Phase Generation
+const generate_setup_state = function () {
+    return fc.shuffledSubarray(Yinsh.valid_co_ordinates, {
+        minLength: 2,
+        maxLength: 8
+    }).map(function (positions) {
+        return positions.reduce(
+            function (state, position) {
+                return Yinsh.place_ring(state, position);
+            },
+            Yinsh.initial_state()
+        );
+    });
+};
+
+// Random-Active State Generation
+
+const generate_active_state = function () {
+    return fc.shuffledSubarray(Yinsh.valid_co_ordinates, {
+        minLength: 10,
+        maxLength: 10
+    }).map(function (positions) {
+        return positions.reduce(
+            function (state, position) {
+                return Yinsh.place_ring(state, position);
+            },
+            Yinsh.initial_state()
+        );
+    });
+};
+
+
+// Random-Play Generation
+
+const random_valid_ring_move = function (state) {
+    // pick a random ring
+    const current_player_rings = Object.entries(
+        state.board.rings
+    ).filter(function (entry) {
+        return entry[1] === state.current_player;
+    });
+
+    const random_ring_key = pick_random_element(current_player_rings)[0];
+    const random_ring = keys_to_positions([random_ring_key])[0];
+
+    // find the rings valid moves
+    const possible_moves = Yinsh.valid_co_ordinates.filter(
+        function (coord) {
+            return Yinsh.valid_move(
+                state,
+                random_ring,
+                coord
+            ) === true;
+        }
+    );
+
+    // choose random move
+    const random_move = pick_random_element(possible_moves);
+    if (possible_moves.length === 0) {
+        return undefined;
+    }
+    // execute one of its random moves
+    const new_state = Yinsh.move_ring(state, random_ring, random_move);
+    return {
+        new_state,
+        random_ring,
+        random_move
+    };
+};
+
+const generate_random_play_state = generate_active_state().chain(
+    function (state) {
+        return fc.integer({min: 10, max: 100}).map(
+            function (N) {
+                return R.range(0, N).reduce(
+                    function (state) {
+                        const result = random_valid_ring_move(state);
+                        if (result === undefined) {
+                            return state;
+                        }
+                        return result.new_state;
+                    },
+                    state
+                );
+            }
+        );
+    }
+);
+
+
+//=========================================
+// Initial State
+//=========================================
+
+describe("Yinsh.initial_state()", function () {
     it("Creates an initial state with an empty board", function () {
-        const state = yinsh.initial_state();
-    if (state === undefined) {
-        throw new Error("Expected initial_state to return a game state.");
-    }
-    if (state.phase !== "setup") {
-        throw new Error("Expected phase to be setup.");
-    }
-    if (state.current_player !== "white") {
-        throw new Error("Expected current player to be white.");
-    }
-    if (state.rings_to_place.white !== 5 || state.rings_to_place.black !== 5) {
-        throw new Error("Expected both players to have 5 rings to place.");
-    }
+        const state = Yinsh.initial_state();
+        if (state === undefined) {
+            throw new Error("Expected initial_state to return a game state.");
+        }
+        if (state.phase !== "setup") {
+            throw new Error("Expected phase to be setup.");
+        }
+        if (state.current_player !== "white") {
+            throw new Error("Expected current player to be white.");
+        }
+        if (
+            state.rings_to_place.white !== 5
+            || state.rings_to_place.black !== 5
+        ) {
+            throw new Error("Expected both players to have 5 rings to place.");
+        }
 
-    if (state.rings_removed.white !== 0 || state.rings_removed.black !==0) {
-        throw new Error("Expected both players to have 0 rings removed");
-    }
+        if (
+            state.rings_removed.white !== 0
+            || state.rings_removed.black !== 0
+        ) {
+            throw new Error("Expected both players to have 0 rings removed");
+        }
 
-    if (Object.keys(state.board.rings).length !== 0) {
-        throw new Error("Expected no rings on the board.");
-    }
+        if (Object.keys(state.board.rings).length !== 0) {
+            throw new Error("Expected no rings on the board.");
+        }
 
-    if (Object.keys(state.board.markers).length !== 0) {
-        throw new Error("Expected no markers on the board.");
-    }
+        if (Object.keys(state.board.markers).length !== 0) {
+            throw new Error("Expected no markers on the board.");
+        }
 
     });
 });
 
+//=========================================
+// Place Ring
+//=========================================
 
+describe("Yinsh.place_ring()", function () {
 
-// Place Rings:
-// - valid empty coordinate places the current player's ring
-
-//GIVEN any coordinate chosen from the valid board coordinates
-//AND an initial setup state with no rings placed
-//WHEN place_ring is called with that coordinate
-//THEN the current player's ring should be placed at that coordinate
-
-describe("yinsh.place_ring()", function() {
-    it("the current player's ring can be placed on valid empty coordinate",
-        function(){ //Be more clear and explicit here
-        // - what is a "valid co-ordinate"
+// - occupied coordinate is rejected.
+    it("Ring cannot be placed on a valid, occupied co-ordinate", function () {
         fc.assert(fc.property(
-            // "..." separates valid co ordinates into separate items
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-                const state = yinsh.initial_state();
-                const next_state = yinsh.place_ring(state, position);
-                    const key = yinsh.position_to_key(position);
-
-                if (next_state === undefined) {
-                    throw new Error("Expected valid placement not to be rejected.");
-                }
-
-                if (next_state.board.rings[key] !== state.current_player){
+            generate_setup_state(),
+            function (state) {
+                // positive assertion to prevent false positive
+                if (state === undefined) {
                     throw new Error(
-                        "Expected " + state.current_player +
-                        " ring at" + key + "."
+                        "Expected valid placement to succeed"
                     );
                 }
-            }
-        ),  { verbose: 2 });
-    });
+                const current_player_rings = Object.fromEntries(
+                    Object.entries(
+                        state.board.rings
+                    ).filter(function (entry) {
+                        return entry[1] === state.current_player;
+                    })
+                );
 
-    // - occupied coordinate is rejected.
-        it("valid occupied co ordinate does not place a ring", function(){
-            fc.assert(fc.property(
-                fc.constantFrom(...yinsh.valid_co_ordinates),
-                function(position) {
-                    const state = yinsh.initial_state();
-                    // verify it works - positive assertion required otherwise will always pass
-                    const occupied_state = yinsh.place_ring(state, position);
-                     if (occupied_state === undefined){
-                        throw new Error(
-                            "Expected first placement to succeed"
-                        );
-                    }
-                    const rejected_state = yinsh.place_ring(occupied_state, position);
+                const random_placed_ring = keys_to_positions(
+                    [pick_random_element(
+                        Object.keys(current_player_rings)
+                    )]
+                )[0];
 
-                    if (rejected_state !== undefined){
-                        throw new Error(
-                            "Expected placement on occupied coordinate" +
-                            "to be rejected."
-                        );
-                    }
-                }
-            ));
-        });
+                const rejected_state = Yinsh.place_ring(
+                    state,
+                    random_placed_ring
+                );
 
-// REWRITE USING VAL ACTIVE PHASE
-// // - non-setup phase placement is rejected.
-
-        it("Rings can't be placed in the non-setup phase", function(){
-            fc.assert(fc.property(
-                fc.constantFrom(...yinsh.valid_co_ordinates),
-                function(position) {
-                    const state = yinsh.initial_state();
-                    state.phase = "active";
-                    const place_ring_non_setup = yinsh.place_ring(state, position);
-
-                    if (place_ring_non_setup !== undefined){
-                        throw new Error(
-                            "Expected ring placement during non-setup to be rejected."
-                        );
-                    }
-                }
-            ));
-        });
-
-
-// - phase transitions to non-setup phase once all 10 rings placed
-
-        it("Phase transitions to active once all 10 rings placed", function(){
-            fc.assert(fc.property(
-                fc.shuffledSubarray(yinsh.valid_co_ordinates, {
-                    minLength: 10,
-                    maxLength: 10
-                    }),
-                function(ring_positions) {
-
-                    const final_state = ring_positions.reduce(
-                        function(state, position) {
-                             if (state === undefined) {
-                                 return undefined;
-                             }
-                            return yinsh.place_ring(state, position);
-                        },
-                        yinsh.initial_state()
+                if (rejected_state !== undefined) {
+                    throw new Error(
+                        "Expected placement on occupied coordinate" +
+                        "to be rejected. Placement was accepted on" +
+                        "occupied space:" + JSON.stringify(random_placed_ring)
                     );
-
-                    if (final_state === undefined) {
-                        throw new Error(
-                            "Expected all 10 placements to be valid."
-                        );
-                    }
-                    if (final_state.phase !== "active"){
-                        throw new Error(
-                            "Expected game phase to be active"
-                        );
-                    }
-                }
-            ));
-        });
-
-// - successful placement does not mutate the original state.
-        it("Successful placement should not mutate the original state",
-            function(){
-            fc.assert(fc.property(
-                fc.constantFrom(...yinsh.valid_co_ordinates),
-                function(position) {
-                    const state = yinsh.initial_state();
-                    // check if placement works first 
-                    if (state ===undefined){
-                        throw new Error(
-                            "Expected successfull ring placement"
-                        );
-                    }
-                    const state_before_json = JSON.stringify(state);
-
-                    yinsh.place_ring(state, position);
-
-                    const state_after_json = JSON.stringify(state);
-
-
-                    if (state_before_json !== state_after_json){
-                        throw new Error(
-                            "Mutation detected, the original state object was modified."
-                        );
-                    }
-                }
-            ));
-        });
-
-    });
-
-
-// Move Rings:
-
-
-describe("yinsh.move_ring()", function() {
-    // -----legality------
-// REPLACE WITH NEW
-it("Turn alternates when player successfuly moves ring", function(){
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-                 const new_position = {
-                    r:position.r+1,
-                    q:position.q
-                };
-
-                if (!yinsh.is_valid_co_ordinate(new_position)) {
-                    return;
-                }
-
-                const position_key = yinsh.position_to_key(position);
-
-                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                            [position_key]: "white"
-                        },
-                        markers: {
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 0,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-                const moved_state = yinsh.move_ring(state, position, new_position);
-                if (moved_state.current_player !== "black") {
-                    throw new Error("Expected turn to alternate"
-                        + "after successful marker movement");
                 }
             }
         ));
     });
 
-    it("Moving during setup phase is rejected", function(){
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-                 const new_position = {
-                    r:position.r+1,
-                    q:position.q
-                };
+    it(
+        "the current player's ring"
+        + " can be placed on valid empty coordinate",
+        function () {
+            fc.assert(fc.property(
+                generate_setup_state(),
+                function (state) {
 
-                if (!yinsh.is_valid_co_ordinate(new_position)) {
-                    return;
+                    const empty_co_ordinates = (
+                        Yinsh.valid_co_ordinates.filter(function (co_ord) {
+                            return state.board.rings[
+                                position_to_key(co_ord)
+                            ] === undefined;
+                        })
+                    );
+                    const random_empty_co_ord = pick_random_element(
+                        empty_co_ordinates
+                    );
+                    const new_state = Yinsh.place_ring(
+                        state,
+                        random_empty_co_ord
+                    );
+                    if (new_state === undefined) {
+                        throw new Error(
+                            "Expected initial"
+                            + "valid placement not to be rejected"
+                        );
+                    }
+                    const random_empty_key = position_to_key(
+                        random_empty_co_ord
+                    );
+                    if (
+                        new_state.board.rings[random_empty_key]
+                        !== state.current_player
+                    ) {
+                        throw new Error(
+                            "Expected a "
+                            + state.current_player
+                            + "ring at " + JSON.stringify(random_empty_key)
+                        );
+
+                    }
+                }
+            ));
+        }
+    );
+
+    // - successful placement does not mutate the original state.
+    it((
+        "Successful placement should not"
+        + "mutate the original state"
+    ), function () {
+        fc.assert(fc.property(
+            generate_setup_state(),
+            function (state) {
+
+                const empty_co_ordinates = (
+                    Yinsh.valid_co_ordinates.filter(function (co_ord) {
+                        return state.board.rings[
+                            position_to_key(co_ord)
+                        ] === undefined;
+                    })
+                );
+                const random_empty_co_ord = pick_random_element(
+                    empty_co_ordinates
+                );
+                const state_before_json = JSON.stringify(state);
+                Yinsh.place_ring(
+                    state,
+                    random_empty_co_ord
+                );
+                const state_after_json = JSON.stringify(state);
+
+                if (state_before_json !== state_after_json) {
+                    throw new Error(
+                        "Mutation detected,"
+                        + "the original state object was modified." +
+                        "Original State was:" + state_before_json +
+                        "Mutated State was:" + state_after_json
+                    );
+
+                }
+            }
+        ));
+    });
+
+
+    it("Rings can't be placed in the non-setup phase", function () {
+        fc.assert(fc.property(
+            generate_active_state(),
+            function (state) {
+                const valid_placement_positions = (
+                    Yinsh.valid_co_ordinates.filter(function (co_ord) {
+                        return state.board.rings[
+                            position_to_key(co_ord)
+                        ] === undefined;
+                    })
+                );
+
+                const valid_placement_position = (
+                    pick_random_element(valid_placement_positions)
+                );
+                const place_ring_non_setup = Yinsh.place_ring(
+                    state,
+                    valid_placement_position
+                );
+
+                if (place_ring_non_setup !== undefined) {
+                    throw new Error(
+                        "Expected ring placement"
+                        + "during non-setup to be rejected." +
+                        "Ring was placed at:"
+                        + JSON.stringify(valid_placement_position)
+                    );
+                }
+            }
+        ));
+    });
+
+    it("Phase transitions to active once all 10 rings placed", function () {
+        fc.assert(fc.property(
+            generate_active_state(),
+            function (state) {
+
+                if (state === undefined) {
+                    throw new Error(
+                        "Expected all 10 placements to be valid."
+                    );
                 }
 
-                const position_key = yinsh.position_to_key(position);
-
-                const state = {
-                    phase: "setup",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                            [position_key]: "white"
-                        },
-                        markers: {
-                        }
-                    },
-                    rings_to_place: {
-                        white: 1,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 0,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-                 // first verify move_ring works in active phase
-                const active_state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {rings: {[position_key]: "white"}, markers: {}},
-                    rings_to_place: {white: 0, black: 0},
-                    rings_removed: {white: 0, black: 0},
-                    winner: undefined
-                };
-                if (yinsh.move_ring(active_state, position, new_position)
-                    === undefined) {
+                if (state.phase !== "active") {
                     throw new Error(
-                    "Expected move to work in active phase"
-                );
+                        "Expected game phase to be active" +
+                        "Instead it is:" + JSON.stringify(state.phase)
+                    );
+                }
             }
+        ));
+    });
 
-                const moved_state = yinsh.move_ring(state, position, new_position);
-                if (moved_state !== undefined) {
-                    throw new Error("Expected undefined, should not be able to"
-                        + "move rings during setup phase");
+
+});
+
+
+//====================
+// Move Ring
+//====================
+
+
+describe("Yinsh.move_ring()", function () {
+
+    it("Moving during setup phase is rejected", function () {
+        fc.assert(fc.property(
+            generate_setup_state(),
+            function (state) {
+                const current_player_rings = Object.fromEntries(
+                    Object.entries(state.board.rings).filter(
+                        function (entry) {
+                            return entry[1] === state.current_player;
+                        }
+                    )
+                );
+
+                const random_current_player_ring = keys_to_positions(
+                    [pick_random_element(Object.keys(current_player_rings))]
+                )[0];
+
+                const new_position = {
+                    r: random_current_player_ring.r + 1,
+                    q: random_current_player_ring.q
+                };
+                if (!Yinsh.is_valid_co_ordinate(new_position)) {
+                    return;
+                }
+                const new_state = Yinsh.move_ring(
+                    state,
+                    random_current_player_ring,
+                    new_position
+                );
+
+                if (new_state !== undefined) {
+                    throw new Error(
+                        "Expected undefined, should not be able to"
+                        + "move rings during setup phase. " +
+                        "Was able to move: " +
+                        JSON.stringify(random_current_player_ring) +
+                        " to:" + JSON.stringify(new_position)
+                    );
                 }
             }
         ));
@@ -298,237 +413,40 @@ it("Turn alternates when player successfuly moves ring", function(){
 
     // - moving in a non-straight line is rejected.
 
-    it("moving in a non-straight line is rejected", function(){
-    fc.assert(fc.property(
-        fc.constantFrom(...yinsh.valid_co_ordinates),
-        function(position) {
-            const test_position = {
-                r: position.r + 1,
-                q: position.q
-            };
-            const new_position = {
-                r: position.r + 1,
-                q: position.q + 1
-            };
-
-            if (
-                !yinsh.is_valid_co_ordinate(test_position) ||
-                !yinsh.is_valid_co_ordinate(new_position)
-            ) {
-                return;
-            }
-
-            const position_key = yinsh.position_to_key(position);
-            const state = {
-                phase: "active",
-                current_player: "white",
-                board: {
-                    rings: {
-                        [position_key]: "white"
-                    },
-                    markers: {}
-                },
-                rings_to_place: {
-                    white: 5,
-                    black: 5
-                },
-                rings_removed: {
-                    white: 0,
-                    black: 0
-                },
-                winner: undefined
-            };
-
-            if (yinsh.move_ring(state, position, test_position) === undefined) {
-                throw new Error("Expected straight line movement to work");
-            }
-            if (yinsh.move_ring(state, position, new_position) !== undefined) {
-                throw new Error("Expected non-straight line ring movement to be rejected");
-            }
-        }
-    ));
-});
-// - legal move moves the ring from start to
-// destination and leaves a marker at start.
-
-    it("legal move moves the ring from start to destination and leaves a marker at the start", function(){
+    it("moving in a non-straight line is rejected", function () {
         fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-                 const new_position = {
-                    r:position.r,
-                    q:position.q+1
+            fc.constantFrom(...Yinsh.valid_co_ordinates),
+            function (position) {
+                const test_position = {
+                    r: position.r + 1,
+                    q: position.q
                 };
-
-                if (
-                !yinsh.is_valid_co_ordinate(new_position)) {
-                    return;
-                }
-
-                const key_position = yinsh.position_to_key(position);
-                const key_new_position = yinsh.position_to_key(new_position);
-                const active_state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                            [key_position]: "white"
-                        },
-                        markers: {
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 0,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-   
-                const moved_state = yinsh.move_ring(active_state, position, new_position);
-
-                if (moved_state.board.rings[key_new_position]
-                    !== active_state.current_player
-                    || moved_state.board.markers[key_position]
-                    !== active_state.current_player) {
-                    throw new Error("Expected the current player's marker at "
-                        + "start position and their ring at the destination");
-                }
-            }
-        ));
-    });
-
-    // - legal move with markers flips exactly the markers on the path.
-
-    it("A legal move only flips the markers on its path", function(){
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-                 const new_position = {
-                    r:position.r,
-                    q:position.q+3
-                };
-
-                const inter_position_1 = {
-                    r:position.r,
-                    q:position.q+1
-                };
-
-                const inter_position_2 = {
-                    r:position.r,
-                    q:position.q+2
-                };
-
-                if (
-                    !yinsh.is_valid_co_ordinate(new_position)) {
-                    return;
-                }
-                const position_key =
-                 yinsh.position_to_key(position);
-                const inter_position_1_key =
-                 yinsh.position_to_key(inter_position_1);
-                const inter_position_2_key =
-                 yinsh.position_to_key(inter_position_2);
-
-                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                            [position_key]: "white"
-                        },
-                        markers: {
-                            [inter_position_1_key]: "white",
-                            [inter_position_2_key]: "white"
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 0,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-
-
-                const moved_state = yinsh.move_ring(
-                    state, position, new_position
-                );
-                const is_flipped_1 =
-                 moved_state.board.markers[inter_position_1_key] !== "black";
-                const is_flipped_2 =
-                 moved_state.board.markers[inter_position_2_key] !== "black";
-
-                if (is_flipped_1 || is_flipped_2) {
-                    throw new Error(
-                        "Expected all markers between the" +
-                         "start and end position to be flipped"
-                    );
-                }
-            }
-        ));
-    });
-    // - moving ring to an occupied space is rejected
-    it("Moving a ring to a marker-occupied space is rejected", function(){
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-
-                const inter_position_1 = {
-                    r:position.r,
-                    q:position.q+1
-                };
-
                 const new_position = {
-                    r:position.r,
-                    q:position.q+2
+                    r: position.r + 1,
+                    q: position.q + 1
                 };
 
                 if (
-                    !yinsh.is_valid_co_ordinate(new_position)) {
+                    !Yinsh.is_valid_co_ordinate(test_position) ||
+                    !Yinsh.is_valid_co_ordinate(new_position)
+                ) {
                     return;
                 }
-                const position_key =
-                 yinsh.position_to_key(position);
-                const inter_position_1_key =
-                 yinsh.position_to_key(inter_position_1);
-                const new_position_key =
-                 yinsh.position_to_key(new_position);
+                const rings = Object.assign({}, {});
 
-
-                const empty_state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {rings: {[position_key]: "white"}, markers: {}},
-                    rings_to_place: {white: 0, black: 0},
-                    rings_removed: {white: 0, black: 0},
-                    winner: undefined
-                };
-                if (yinsh.move_ring(empty_state, position, inter_position_1) === undefined) {
-                    throw new Error("Expected move to empty space to work");
-                    }
+                const position_key = position_to_key(position);
+                rings[position_key] = "white";
 
                 const state = {
                     phase: "active",
                     current_player: "white",
                     board: {
-                        rings: {
-                            [position_key]: "white"
-                        },
-                        markers: {
-                            [inter_position_1_key]: "white",
-                            [new_position_key]: "white"
-                        }
+                        rings,
+                        markers: {}
                     },
                     rings_to_place: {
-                        white: 0,
-                        black: 0
+                        white: 5,
+                        black: 5
                     },
                     rings_removed: {
                         white: 0,
@@ -537,17 +455,20 @@ it("Turn alternates when player successfuly moves ring", function(){
                     winner: undefined
                 };
 
-
-                const moved_state = yinsh.move_ring(
-                    state, position, new_position
-                );
-
-                
-
-                if (moved_state !== undefined) {
+                if (Yinsh.move_ring(
+                    state,
+                    position,
+                    test_position
+                ) === undefined) {
+                    throw new Error("Expected straight line movement to work");
+                }
+                if (Yinsh.move_ring(
+                    state,
+                    position,
+                    new_position
+                ) !== undefined) {
                     throw new Error(
-                        "Expected undefined, can't move a ring"
-                        + "to a marker-occupied position"
+                        "Expected non-straight line movement to be rejected"
                     );
                 }
             }
@@ -555,54 +476,66 @@ it("Turn alternates when player successfuly moves ring", function(){
     });
 
 
-    // - moving ring to an occupied space is rejected
-    it("Moving a ring to a ring-occupied space is also rejected", function(){
+      // - moving ring to an occupied space is rejected
+    it("Moving a ring to a marker-occupied space is rejected", function () {
         fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-
+            fc.constantFrom(...Yinsh.valid_co_ordinates),
+            function (position) {
                 const inter_position_1 = {
-                    r:position.r,
-                    q:position.q+1
+                    r: position.r,
+                    q: position.q + 1
                 };
-
                 const new_position = {
-                    r:position.r,
-                    q:position.q+2
+                    r: position.r,
+                    q: position.q + 2
                 };
-
                 if (
-                    !yinsh.is_valid_co_ordinate(new_position)) {
+                    !Yinsh.is_valid_co_ordinate(new_position)
+                ) {
                     return;
                 }
-                const position_key =
-                 yinsh.position_to_key(position);
-                const inter_position_1_key =
-                 yinsh.position_to_key(inter_position_1);
-                const new_position_key =
-                 yinsh.position_to_key(new_position);
+                const position_key = (
+                    position_to_key(position)
+                );
+                const inter_position_1_key = (
+                    position_to_key(inter_position_1)
+                );
+                const new_position_key = (
+                    position_to_key(new_position)
+                );
+
+                const rings_1 = Object.assign({}, {});
+                rings_1[position_key] = "white";
                 const empty_state = {
                     phase: "active",
                     current_player: "white",
-                    board: {rings: {[position_key]: "white"}, markers: {}},
+                    board: {rings: rings_1, markers: {}},
                     rings_to_place: {white: 0, black: 0},
                     rings_removed: {white: 0, black: 0},
                     winner: undefined
                 };
-                if (yinsh.move_ring(empty_state, position, inter_position_1) === undefined) {
+                if (Yinsh.move_ring(
+                    empty_state,
+                    position,
+                    inter_position_1
+                ) === undefined) {
                     throw new Error("Expected move to empty space to work");
-}
+                }
+
+
+
+                const rings_2 = Object.assign({}, {});
+                rings_2[position_key] = "white";
+                const markers_2 = Object.assign({}, {});
+                markers_2[inter_position_1_key] = "white";
+                markers_2[new_position_key] = "white";
+
                 const state = {
                     phase: "active",
                     current_player: "white",
                     board: {
-                        rings: {
-                            [position_key]: "white",
-                            [new_position_key]: "white"
-                        },
-                        markers: {
-                            [inter_position_1_key]: "white",
-                        }
+                        rings: rings_2,
+                        markers: markers_2
                     },
                     rings_to_place: {
                         white: 0,
@@ -616,87 +549,206 @@ it("Turn alternates when player successfuly moves ring", function(){
                 };
 
 
-                const moved_state = yinsh.move_ring(
-                    state, position, new_position
+                const moved_state = Yinsh.move_ring(
+                    state,
+                    position,
+                    new_position
                 );
 
                 if (moved_state !== undefined) {
                     throw new Error(
                         "Expected undefined, can't move a ring"
-                        + "to a ring-occupied position"
+                        + "to a marker-occupied position " +
+                        ". Ring at: " +
+                        JSON.stringify(position) +
+                        "was moved to marker occupied space:" +
+                        JSON.stringify(new_position)
                     );
                 }
             }
         ));
     });
 
-    // - can only move ring across 1 set of consecutive markers, 
+
+
+    // - moving ring to an occupied space is rejected
+    it("Moving a ring to a ring-occupied space is also rejected", function () {
+        fc.assert(fc.property(
+            fc.constantFrom(...Yinsh.valid_co_ordinates),
+            function (position) {
+
+                const inter_position_1 = {
+                    r: position.r,
+                    q: position.q + 1
+                };
+
+                const new_position = {
+                    r: position.r,
+                    q: position.q + 2
+                };
+
+                if (
+                    !Yinsh.is_valid_co_ordinate(new_position)
+                ) {
+                    return;
+                }
+                const position_key = (
+                    position_to_key(position)
+                );
+                const inter_position_1_key = (
+                    position_to_key(inter_position_1)
+                );
+                const new_position_key = (
+                    position_to_key(new_position)
+                );
+                const rings = Object.assign({}, {});
+                rings[position_key] = "white";
+                const empty_state = {
+                    phase: "active",
+                    current_player: "white",
+                    board: {rings, markers: {}},
+                    rings_to_place: {white: 0, black: 0},
+                    rings_removed: {white: 0, black: 0},
+                    winner: undefined
+                };
+                if (Yinsh.move_ring(
+                    empty_state,
+                    position,
+                    inter_position_1
+                ) === undefined) {
+                    throw new Error("Expected move to empty space to work");
+                }
+                const rings_2 = Object.assign({}, {});
+                rings_2[position_key] = "white";
+                rings_2[new_position_key] = "white";
+                const markers_2 = Object.assign({}, {});
+                markers_2[inter_position_1_key] = "white";
+                const state = {
+                    phase: "active",
+                    current_player: "white",
+                    board: {
+                        rings: rings_2,
+                        markers: markers_2
+                    },
+                    rings_to_place: {
+                        white: 0,
+                        black: 0
+                    },
+                    rings_removed: {
+                        white: 0,
+                        black: 0
+                    },
+                    winner: undefined
+                };
+
+
+                const moved_state = Yinsh.move_ring(
+                    state,
+                    position,
+                    new_position
+                );
+
+                if (moved_state !== undefined) {
+                    throw new Error(
+                        "Expected undefined, can't move a ring"
+                        + "to a ring-occupied position " +
+                        ". Ring at: " +
+                        JSON.stringify(position) +
+                        "was moved to ring occupied space:" +
+                        JSON.stringify(new_position)
+                    );
+                }
+            }
+        ));
+    });
+
+    // - can only move ring across 1 set of consecutive markers,
     // it must be placed at the next empty space
-     it("Can only move a ring across markers not empty spaces", function(){
+    it("Can only move a ring across markers not empty spaces", function () {
         fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
+            fc.constantFrom(...Yinsh.valid_co_ordinates),
+            function (position) {
 
                 const inter_position_1 = {
-                    r:position.r,
-                    q:position.q+1
+                    r: position.r,
+                    q: position.q + 1
                 };
 
                 const inter_position_2 = {
-                    r:position.r,
-                    q:position.q+3
+                    r: position.r,
+                    q: position.q + 3
                 };
 
                 const new_position = {
-                    r:position.r,
-                    q:position.q+4
+                    r: position.r,
+                    q: position.q + 4
                 };
 
                 if (
-                    !yinsh.is_valid_co_ordinate(new_position)) {
+                    !Yinsh.is_valid_co_ordinate(new_position)
+                ) {
                     return;
                 }
-                const position_key =
-                 yinsh.position_to_key(position);
-                const inter_position_1_key =
-                 yinsh.position_to_key(inter_position_1);
-                const inter_position_2_key =
-                 yinsh.position_to_key(inter_position_2);
-                const consecutive_position_2 = {r: position.r, q: position.q + 2};
-                const consecutive_key = yinsh.position_to_key(consecutive_position_2);
+                const position_key = (
+                    position_to_key(position)
+                );
+                const inter_position_1_key = (
+                    position_to_key(inter_position_1)
+                );
+                const inter_position_2_key = (
+                    position_to_key(inter_position_2)
+                );
+                const consecutive_position_2 = {
+                    r: position.r,
+                    q: position.q + 2
+                };
+                const consecutive_key = position_to_key(
+                    consecutive_position_2
+                );
                 const consecutive_dest = {r: position.r, q: position.q + 3};
-                if (!yinsh.is_valid_co_ordinate(consecutive_dest)) {
+                if (!Yinsh.is_valid_co_ordinate(consecutive_dest)) {
                     return;
                 }
+
+                const rings = Object.assign({}, {});
+                rings[position_key] = "white";
+                const markers = Object.assign({}, {});
+                markers[inter_position_1_key] = "white";
+                markers[consecutive_key] = "white";
+
                 const consecutive_state = {
                     phase: "active",
                     current_player: "white",
                     board: {
-                        rings: {[position_key]: "white"},
-                        markers: {
-                            [inter_position_1_key]: "white",
-                            [consecutive_key]: "white"
-                        }
+                        rings,
+                        markers
                     },
                     rings_to_place: {white: 0, black: 0},
                     rings_removed: {white: 0, black: 0},
                     winner: undefined
                 };
-                if (yinsh.move_ring(consecutive_state, position,
-                    consecutive_dest) === undefined) {
-                    throw new Error("Expected move over consecutive markers to work");
+                if (Yinsh.move_ring(
+                    consecutive_state,
+                    position,
+                    consecutive_dest
+                ) === undefined) {
+                    throw new Error(
+                        "Expected move over consecutive markers to work"
+                    );
                 }
+
+                const rings_2 = Object.assign({}, {});
+                rings_2[position_key] = "white";
+                const markers_2 = Object.assign({}, {});
+                markers_2[inter_position_1_key] = "white";
+                markers_2[inter_position_2_key] = "white";
+
                 const state = {
                     phase: "active",
                     current_player: "white",
                     board: {
-                        rings: {
-                            [position_key]: "white",
-                        },
-                        markers: {
-                            [inter_position_1_key]: "white",
-                            [inter_position_2_key]: "white"
-                        }
+                        rings: rings_2,
+                        markers: markers_2
                     },
                     rings_to_place: {
                         white: 0,
@@ -709,9 +761,10 @@ it("Turn alternates when player successfuly moves ring", function(){
                     winner: undefined
                 };
 
-
-                const moved_state = yinsh.move_ring(
-                    state, position, new_position
+                const moved_state = Yinsh.move_ring(
+                    state,
+                    position,
+                    new_position
                 );
 
                 if (moved_state !== undefined) {
@@ -724,32 +777,58 @@ it("Turn alternates when player successfuly moves ring", function(){
         ));
     });
 
-    // - total number of rings stays the same after a legal move.
-   it("The total number of rings stays the same after a legal move", function(){
+
+
+    // - moving opponent's ring is rejected.
+    it("Moving an opponent's ring is rejected", function () {
         fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
+            fc.constantFrom(...Yinsh.valid_co_ordinates),
+            function (position) {
 
                 const new_position = {
-                    r:position.r,
-                    q:position.q+1
+                    r: position.r,
+                    q: position.q + 1
                 };
 
                 if (
-                    !yinsh.is_valid_co_ordinate(new_position)) {
+                    !Yinsh.is_valid_co_ordinate(new_position)
+                ) {
                     return;
                 }
-                const position_key =
-                 yinsh.position_to_key(position);
+                const position_key = (
+                    position_to_key(position)
+                );
+                const rings = Object.assign({}, {});
+                rings[position_key] = "white";
 
+                const own_ring_state = {
+                    phase: "active",
+                    current_player: "white",
+                    board: {
+                        rings,
+                        markers: {}
+                    },
+                    rings_to_place: {white: 0, black: 0},
+                    rings_removed: {white: 0, black: 0},
+                    winner: undefined
+                };
+                if (Yinsh.move_ring(
+                    own_ring_state,
+                    position,
+                    new_position
+                ) === undefined) {
+                    throw new Error("Expected moving own ring to work");
+                }
+
+
+                const rings_2 = Object.assign({}, {});
+                rings_2[position_key] = "black";
 
                 const state = {
                     phase: "active",
                     current_player: "white",
                     board: {
-                        rings: {
-                            [position_key]: "white",
-                        },
+                        rings: rings_2,
                         markers: {
 
                         }
@@ -766,75 +845,10 @@ it("Turn alternates when player successfuly moves ring", function(){
                 };
 
 
-                const moved_state = yinsh.move_ring(
-                    state, position, new_position
-                );
-
-                if (Object.keys(moved_state.board.rings).length !==
-                 Object.keys(state.board.rings).length)  {
-                    throw new Error(
-                        "Expected number of rings to stay the same" +
-                        "as no lines of 5 created"
-                    );
-                }
-            }
-        ));
-    });
-
-    // - moving opponent's ring is rejected.
-   it("Moving an opponent's ring is rejected", function(){
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-
-                const new_position = {
-                    r:position.r,
-                    q:position.q+1
-                };
-
-                if (
-                    !yinsh.is_valid_co_ordinate(new_position)) {
-                    return;
-                }
-                const position_key =
-                 yinsh.position_to_key(position);
-
-                const own_ring_state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {rings: {[position_key]: "white"}, markers: {}},
-                    rings_to_place: {white: 0, black: 0},
-                    rings_removed: {white: 0, black: 0},
-                    winner: undefined
-                };
-                if (yinsh.move_ring(own_ring_state, position, new_position) === undefined) {
-                    throw new Error("Expected moving own ring to work");
-                }
-                                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                            [position_key]: "black",
-                        },
-                        markers: {
-
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 0,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-
-
-                const moved_state = yinsh.move_ring(
-                    state, position, new_position
+                const moved_state = Yinsh.move_ring(
+                    state,
+                    position,
+                    new_position
                 );
 
                 if (moved_state !== undefined) {
@@ -848,370 +862,222 @@ it("Turn alternates when player successfuly moves ring", function(){
     });
 
 
-// - successful movement does not mutate the original state.
+    // - total number of rings stays the same after a legal move.
+    it((
+        "The total number of rings" +
+        " stays the same after a legal move"
+    ), function () {
+        fc.assert(fc.property(generate_random_play_state, function (state) {
 
+            const result = random_valid_ring_move(state);
+
+
+            if (result === undefined || result.new_state === undefined) {
+                return;
+            }
+
+            const {new_state} = result;
+
+
+
+            if (
+                new_state.rings_removed.white
+                !== state.rings_removed.white
+                ||
+                new_state.rings_removed.black
+                !== state.rings_removed.black
+            ) {
+                return;
+            }
+            const n_rings_before = Object.keys(state.board.rings).length;
+            const n_rings_after = Object.keys(new_state.board.rings).length;
+
+            if (n_rings_before !== n_rings_after) {
+                throw new Error(
+                    "expected number of rings" +
+                    "to stay the same after a legal move"
+                    + ". Number of rings changed from "
+                    + n_rings_before + "to" +
+                    n_rings_after
+                );
+            }
+
+        }));
+    });
+
+
+
+    // - legal move moves the ring from start to
+    // destination and leaves a marker at start.
+
+    it((
+        "legal move moves the ring from start to destination "
+        + "and leaves a marker at the start"
+    ), function () {
+        fc.assert(fc.property(
+            generate_random_play_state,
+            function (state) {
+                const result = random_valid_ring_move(state);
+                if (
+                    result === undefined
+                    || result.new_state === undefined
+                ) {
+                    return;
+                }
+                const {new_state, random_ring, random_move} = result;
+
+                if (
+                    new_state.rings_removed.white
+                    !== state.rings_removed.white ||
+                    new_state.rings_removed.black
+                    !== state.rings_removed.black
+                ) {
+                    return;
+                }
+
+                // marker at the start
+                const is_marker_at_origin = new_state.board.markers[
+                    position_to_key(random_ring)
+                ] !== undefined;
+
+                // ring at new destination not start
+                const is_ring_at_destination = new_state.board.rings[
+                    position_to_key(random_move)
+                ] !== undefined;
+                if (!is_ring_at_destination || !is_marker_at_origin) {
+                    throw new Error(
+                        "Expected the current player's colour"
+                        + "marker at start position and"
+                        + "their ring at the destination"
+                    );
+                }
+            }
+        ));
+    });
+
+    // - legal move with markers flips exactly the markers on the path.
+
+    it("A legal move only flips the markers on its path", function () {
+        fc.assert(fc.property(
+            generate_random_play_state,
+            function (state) {
+                const result = random_valid_ring_move(state);
+                if (
+                    result === undefined
+                    || result.new_state === undefined
+                ) {
+                    return;
+                }
+                const {new_state, random_ring, random_move} = result;
+
+                if (
+                    new_state.rings_removed.white
+                    !== state.rings_removed.white ||
+                    new_state.rings_removed.black
+                    !== state.rings_removed.black
+                ) {
+                    return;
+                }
+
+                const marker_positions = keys_to_positions(
+                    Object.keys(state.board.markers)
+                );
+
+                const markers_in_between = Yinsh.co_ords_in_between(
+                    marker_positions,
+                    random_ring,
+                    random_move
+                );
+
+                markers_in_between.forEach(function (co_ord) {
+                    const key = position_to_key(co_ord);
+                    if (
+                        state.board.markers[key]
+                        === new_state.board.markers[key]
+                    ) {
+                        throw new Error(
+                            "Expected marker at "
+                            + key + " to be flipped"
+                        );
+                    }
+                });
+            }
+        ));
+    });
+
+
+    it("Turn alternates when player successfuly moves ring", function () {
+
+        fc.assert(fc.property(
+            generate_random_play_state,
+            function (state) {
+                const result = random_valid_ring_move(state);
+                if (
+                    result === undefined
+                    || result.new_state === undefined
+                ) {
+                    return;
+                }
+                const new_state = result.new_state;
+
+                if (
+                    new_state.rings_removed.white
+                    !== state.rings_removed.white ||
+                    new_state.rings_removed.black
+                    !== state.rings_removed.black
+                ) {
+                    return;
+                }
+                if (
+                    state.current_player
+                    === new_state.current_player
+                ) {
+                    throw new Error(
+                        "Expected turn to alternate"
+                        + "after successful ring movement"
+                        + " but current player stayed as: "
+                        + state.current_player
+                    );
+                }
+            }
+        ));
+    });
 });
 
 
+//=======================
+//Lines of Five
+//=======================
 
-
-//Lines of Five:
-
-describe ("yinsh.lines_of_five", function() {
+describe("Yinsh.lines_of_five", function () {
 
 
     // - every returned line has exactly 5 coordinates.
 
-    it("every returned line has exactly 5 co-ordinates", function(){
+    it("every returned line has exactly 5 co-ordinates", function () {
         fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
+            generate_random_play_state,
+            function (state) {
+                const lines = Yinsh.lines_of_five(state);
 
-                const p1 = {
-                    r:position.r,
-                    q:position.q+1
-                };
-                const p2 = {
-                    r:position.r,
-                    q:position.q+2
-                };
-                const p3 = {
-                    r:position.r,
-                    q:position.q+3
-                };
-                const p4 = {
-                    r:position.r,
-                    q:position.q+4
-                };
-                 const p5 = {
-                    r:position.r+1,
-                    q:position.q
-                };
-
-
-                if (
-                    !yinsh.is_valid_co_ordinate(p4)) {
+                if (lines === undefined) {
                     return;
                 }
-                const p1_key =
-                 yinsh.position_to_key(p1);
-                 const p2_key =
-                 yinsh.position_to_key(p2);
-                 const p3_key =
-                 yinsh.position_to_key(p3);
-                 const p4_key =
-                 yinsh.position_to_key(p4);
-                 const p5_key =
-                 yinsh.position_to_key(p5);
-                 const position_key =
-                 yinsh.position_to_key(position);
-                 
-                 
 
+                const failing_line = lines.find(function (line) {
+                    return line.line.length !== 5;
+                });
 
-                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                            [position_key]: "black",
-                        },
-                        markers: {
-                            [p1_key]:"white",
-                            [p2_key]:"white",
-                            [p3_key]: "white",
-                            [p4_key]: "white",
-                            [p5_key]: "white",
-                            [position_key]: "white"
-
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 0,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-
-               if (!yinsh.lines_of_five(state).every(line => line.line.length === 5)){
+                if (failing_line) {
                     throw new Error(
                         "Expected only 5 co-ordinates"
-                    );
-               }
-            }
-        ));
-    });
-
-    it("if no line of 5 then return undefined", function() {
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-
-
-
-                if (
-                    !yinsh.is_valid_co_ordinate(position)) {
-                    return;
-                }
-
-                const p1 = {r: position.r, q: position.q + 1};
-                const p2 = {r: position.r, q: position.q + 2};
-                const p3 = {r: position.r, q: position.q + 3};
-                const p4 = {r: position.r, q: position.q + 4};
-                if (yinsh.is_valid_co_ordinate(p4)) {
-                    const line_state = {
-                        phase: "active",
-                        current_player: "white",
-                        board: {
-                            rings: {},
-                            markers: {
-                                [yinsh.position_to_key(position)]: "white",
-                                [yinsh.position_to_key(p1)]: "white",
-                                [yinsh.position_to_key(p2)]: "white",
-                                [yinsh.position_to_key(p3)]: "white",
-                                [yinsh.position_to_key(p4)]: "white"
-                            }
-                        },
-                        rings_to_place: {white: 0, black: 0},
-                        rings_removed: {white: 0, black: 0},
-                        winner: undefined
-                    };
-                    if (yinsh.lines_of_five(line_state) === undefined) {
-                        throw new Error("Expected lines_of_five to find a line");
-                    }
-                }
-                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                        },
-                        markers: {
-
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 0,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-
-                if (yinsh.lines_of_five(state) !== undefined) {
-                    throw new Error(
-                        "Expected a state with no lines of 5 to return undefined"
+                        + "per line of five" +
+                        ", got:" + failing_line.line.length
+                        + "at line: " + JSON.stringify(failing_line.line)
                     );
                 }
-            }
-        ));
-    });
 
 
-});
-
-
-
-// Winner:
-// - player with 3 removed rings is returned.
-
-describe("yinsh.remove_markers()", function () {
-    it("all markers in the line of five are removed from the board", function () {
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function (position) {
-                const p1 = {r: position.r, q: position.q + 1};
-                const p2 = {r: position.r, q: position.q + 2};
-                const p3 = {r: position.r, q: position.q + 3};
-                const p4 = {r: position.r, q: position.q + 4};
-
-                if (!yinsh.is_valid_co_ordinate(p4)) {
-                    return;
-                }
-
-                const position_key = yinsh.position_to_key(position);
-                const p1_key = yinsh.position_to_key(p1);
-                const p2_key = yinsh.position_to_key(p2);
-                const p3_key = yinsh.position_to_key(p3);
-                const p4_key = yinsh.position_to_key(p4);
-
-                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {},
-                        markers: {
-                            [position_key]: "white",
-                            [p1_key]: "white",
-                            [p2_key]: "white",
-                            [p3_key]: "white",
-                            [p4_key]: "white"
-                        }
-                    },
-                    rings_to_place: {white: 0, black: 0},
-                    rings_removed: {white: 0, black: 0},
-                    winner: undefined
-                };
-
-                const lines_of_five = yinsh.lines_of_five(state);
-                const new_state = yinsh.remove_markers(state, lines_of_five);
-
-                const line_positions = lines_of_five[0].line;
-                if (line_positions.some(function (co_ord) {
-                    const key = yinsh.position_to_key(co_ord);
-                    return new_state.board.markers[key] !== undefined;
-                })) {
-                    throw new Error(
-                        "Expected all markers in the line to be removed"
-                    );
-                }
-            }
-        ));
-    });
-
-    // - if both players have fewer than 3 removed rings, winner returns undefined.
-
-    it(" if both players have fewer than 3 removed rings, winner returns undefined", function(){
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-            function(position) {
-
-                if (
-                    !yinsh.is_valid_co_ordinate(position)) {
-                    return;
-                }
-
-                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-                        },
-                        markers: {
-
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 2,
-                        black: 1
-                    },
-                    winner: undefined
-                };
-
-                
-                const win_check = yinsh.winner(state)
-                const win_state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {rings: {}, markers: {}},
-                    rings_to_place: {white: 0, black: 0},
-                    rings_removed: {white: 3, black: 0},
-                    winner: undefined
-                };
-                if (yinsh.winner(win_state) === undefined) {
-                    throw new Error("Expected winner to be returned when 3 rings removed");
-}
-                if (win_check !== undefined) {
-                    throw new Error(
-                        "Expected no winner"
-                    );
-                }
-            }
-        ));
-    });
-
- it("all markers input to the function are removed", function(){
-        fc.assert(fc.property(
-            fc.constantFrom(...yinsh.valid_co_ordinates),
-           function(position) {
-
-                const p1 = {
-                    r:position.r,
-                    q:position.q+1
-                };
-                const p2 = {
-                    r:position.r,
-                    q:position.q+2
-                };
-                const p3 = {
-                    r:position.r,
-                    q:position.q+3
-                };
-                const p4 = {
-                    r:position.r,
-                    q:position.q+4
-                };
-
-
-                if (
-                    !yinsh.is_valid_co_ordinate(p4)) {
-                    return;
-                }
-                const p1_key =
-                 yinsh.position_to_key(p1);
-                 const p2_key =
-                 yinsh.position_to_key(p2);
-                 const p3_key =
-                 yinsh.position_to_key(p3);
-                 const p4_key =
-                 yinsh.position_to_key(p4);
-        
-                 const position_key =
-                 yinsh.position_to_key(position);
-
-
-                const state = {
-                    phase: "active",
-                    current_player: "white",
-                    board: {
-                        rings: {
-
-                        },
-                        markers: {
-                            [position_key]:"white",
-                            [p1_key]:"white",
-                            [p2_key]: "white",
-                            [p3_key]: "white",
-                            [p4_key]: "white",
-                    
-                        }
-                    },
-                    rings_to_place: {
-                        white: 0,
-                        black: 0
-                    },
-                    rings_removed: {
-                        white: 2,
-                        black: 0
-                    },
-                    winner: undefined
-                };
-
-
-                const line_of_five = yinsh.lines_of_five(state);
-                
-                const removed_marker_state = yinsh.remove_markers(state, line_of_five);
-                const new_markers = removed_marker_state.board.markers;
-                const line_positions = line_of_five[0].line;
-                if (line_positions.some(function (co_ord) {
-                    const key = yinsh.position_to_key(co_ord);
-                    return new_markers[key] !== undefined;
-                })) {
-                    throw new Error(
-                        "Expected no markers in line of 5 to still be on the board"
-                    );
-                }
             }
         ));
     });
@@ -1219,14 +1085,69 @@ describe("yinsh.remove_markers()", function () {
 
 
 
+//=======================
+// Remove markers (includes all win conditions)
+//======================
+
+describe("Yinsh.remove_markers()", function () {
+
+    it((
+        "all markers in the line of"
+        + "five are removed from the board"
+    ), function () {
+        fc.assert(fc.property(
+            generate_random_play_state,
+            function (state) {
+                const lines = Yinsh.lines_of_five(state);
+                if (lines === undefined) {
+                    return;
+                }
+                const new_state = Yinsh.remove_markers(state, lines);
+                if (lines[0].line.some(function (co_ord) {
+                    return new_state.board.markers[
+                        position_to_key(co_ord)
+                    ] !== undefined;
+                })) {
+                    throw new Error(
+                        "expected all markers"
+                        + "in the line to be removed. "
+                        + "Remaining markers to be removed: " + JSON.stringify(
+                            lines[0].line.filter(function (co_ord) {
+                                return new_state.board.markers[
+                                    position_to_key(co_ord)
+                                ] !== undefined;
+                            })
+                        )
+                    );
+                }
+            }
+        ));
+    });
+
+    // - if both players have fewer than
+    //  3 removed rings, winner returns undefined.
+
+    it((
+        "winner returns the player who won"
+        + " the game if a player has gotten 3 lines of 5"
+    ), function () {
+        fc.assert(fc.property(generate_random_play_state, function (state) {
+            if (
+                state.rings_removed.white < 3
+                && state.rings_removed.black < 3
+            ) {
+                return;
+            }
+
+            if (Yinsh.winner(state) === undefined) {
+                throw new Error(
+                    "Expected winner to be returned when 3 rings removed" +
+                    "White removed: " + state.rings_removed.white +
+                    " Black removed: " + state.rings_removed.black
+                );
+            }
+        }));
+    });
 
 
-
-
-
-
-
-
-
-
-
+});
